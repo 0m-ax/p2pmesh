@@ -1,0 +1,16 @@
+package transport;
+syntax = "proto3";
+// messageType = 1
+message listGroups {
+	repeated int32 groups = 1;
+}
+// messageType = 2;
+message joinGroup {
+	required int32 groupID = 1;
+}
+// messageType = 3;
+message groupMessage {
+	required int32 groupID = 1;
+	required int32 messageType = 2;
+	required bytes message = 3;
+}

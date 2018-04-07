@@ -1,0 +1,29 @@
+package deviceMessages;
+syntax = "proto3";
+// messageType = 1
+message pushFile {
+	string fileName = 1;
+	bytes fileContents = 2;
+}
+
+
+
+message listFiles {
+	string filePath = 1;
+	int32 requestID = 2;
+}
+message listFilesResponce {
+	int32 requestID = 1;
+	bytes dirContents = 2;
+}
+
+
+message getFile {
+	string filePath = 1;
+	int32 requestID = 2;
+}
+
+message getFileResponce {
+	int32 requestID = 1;
+	bytes fileContents = 2;
+}

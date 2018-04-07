@@ -1,0 +1,29 @@
+const protobuf = require("protobufjs");
+const net = require('net');
+
+(async ()=>{
+	let baseRoot = await protobuf.load("lib/base.proto");
+	let transportRoot = await protobuf.load("lib/transport.proto");
+
+	let baseMessage = baseRoot.lookupType("baseMessage.message");
+	let listGroups = transportRoot.lookupType("transport.listGroups");
+
+	let server = net.createServer(function (socket) { //create new server  
+		socket.on('data',(data)=>{ // recieve data from client
+
+			let message = baseMessage.decode(data) // decode "baseMessage" sent from client } layer  1, initial packaging from the client 
+			console.log('I got a new message',message) // log the decoded message                  }
+
+			if(message.messageType == 1){ // check if the packaged message has the message type of 1                        } layer 2, useful data from the client
+				console.log('I got a list of groups',listGroups.decode(message.message)) // if it does, decode the message }
+			}else{
+				throw new Error('Uknown message type'); // if the data wasnt of the correct type throw error
+			}
+		})
+   })
+   server.listen(7070) //listen on the port that the client created
+})()
+
+// var aesjs = require('aes-js');
+// var key_256_buffer = new Buffer(key_256);
+// console.log(key_256_buffer);

@@ -1,0 +1,6 @@
+package baseMessage;
+syntax = "proto3";
+message message {
+  required int32 messageType = 1;
+  required bytes message = 2;
+}

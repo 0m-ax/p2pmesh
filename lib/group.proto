@@ -1,0 +1,14 @@
+package transport;
+syntax = "proto3";
+// messageType = 1
+message listDevices {
+	repeated int32 devices = 1;
+}
+
+//  messageType = 3
+message deviceMessage {
+	required int32 sourceDeviceID = 1;
+	required int32 destinationDeviceID = 2;
+	required int32 messageType = 3;
+	required int32 message = 4;
+}
