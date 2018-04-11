@@ -14,6 +14,7 @@
   "author": "dean",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^9.6.2",
     "aes-js": "^3.1.0",
     "protobufjs": "^6.8.6"
   }
