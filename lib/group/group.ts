@@ -5,6 +5,8 @@ import { ListDevices } from './listDevices';
 import { GroupSocket } from './groupSocket'
 import { RemoteDevice } from '../device/remoteDevice'
 import { DeviceMessageBase} from './deviceMessageBase'
+import { TypedEvent } from '../typeEvent';
+
 interface IDevices {
     [deviceID: number]: Device;
 }
@@ -13,6 +15,8 @@ export class Group{
     public devices:IDevices = {}
     public groupID:number;
     public groupName:string
+    public onNewDevice = new TypedEvent<Device>();
+
     get deviceArray():Array<Device>{
         return Object.keys(this.devices).map((key) => this.devices[key])
     }
@@ -34,9 +38,12 @@ export class Group{
         for(let device of devices){
             if(!this.devices[device.deviceID]){
                 let remoteDevice = new RemoteDevice(device.deviceID,device.deviceName,this)
+                remoteDevice.addSocket(socket,device.deviceWeight)
                 this.addDevice(remoteDevice)
+            }else{
+                this.devices[device.deviceID].addSocket(socket,device.deviceWeight)
+
             }
-            this.devices[device.deviceID].addSocket(socket,device.deviceWeight)
         }
         let newDeviceListKey = this.deviceArray.map((device)=>device.deviceID+':'+device.deviceWeight).join(',')
         console.log(deviceListKey,newDeviceListKey)
@@ -51,6 +58,7 @@ export class Group{
     }
     addDevice(device:Device){
         this.devices[device.deviceID] = device;
+        this.onNewDevice.emit(device)
     }
     addSocket(socket:SyncSocket){
         if(this.groupSockets.has(socket)){

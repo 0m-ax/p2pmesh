@@ -5,7 +5,7 @@ import { SyncSocket } from "./lib/sync/syncSocket";
 import { createServer, createConnection } from "net";
 import { Ping } from './lib/device/ping'
 setTimeout(() => {
-    let group = new Group(10, 'testGroup')
+    let group = new Group(1, 'testGroup')
     group.addDevice(new LocalDevice(4,'testing',group))
     let syncMan2 = new SyncManager([
         group
