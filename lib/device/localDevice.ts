@@ -12,11 +12,10 @@ export interface MessageEvent<T> {
   message:T
 }
 export class LocalDevice extends Device {
-  get deviceWeight() {
+  deviceWeight(socket:GroupSocket) {
     return 0;
   }
   public onPong = new TypedEvent<MessageEvent<Pong>>();
-
   onMessage(socket: GroupSocket, message: DeviceMessageBase) {
     if (message.deviceMessageType == 1) {
       this._onPing(socket, message, Ping.decode(message.deviceMessageBody));

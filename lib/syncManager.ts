@@ -20,6 +20,7 @@ export class SyncManager {
     this.syncSockets.add(socket)
     socket.onListGroups.on(this._onListGroups.bind(this,socket))
     socket.onJoinGroup.on(this._onJoinGroup.bind(this,socket))
+    socket.onSocketClose.on(this._onSocketClose.bind(this,socket))
     let groups = Object.keys(this.groups).map((key) => this.groups[key])
     socket.sendMessage(new ListGroups({
       groups: groups.map((group) => {
@@ -43,8 +44,11 @@ export class SyncManager {
   _onJoinGroup(socket:SyncSocket,message) {
     this.groups[message.groupID].addSocket(socket)
   }
-  _onClose(socket:SyncSocket){
-
+  _onSocketClose(socket:SyncSocket){
+    console.log("close")
+    for(let group of Object.keys(this.groups).map((key) => this.groups[key])){
+      group.removeSocket(socket)
+    }
   }
 }
 

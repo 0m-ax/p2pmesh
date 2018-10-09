@@ -8,13 +8,18 @@ export class SyncBaseSocket {
     this.name = name;
     this.socket = socket
     this.socket.on('data',this._onData.bind(this))
-    this.onSyncBaseMessage = new TypedEvent<SyncBaseMessage>()
+    this.socket.on('close',this._onClose.bind(this))
   }
-  public onSyncBaseMessage:TypedEvent<SyncBaseMessage>
+  public onSyncBaseMessage:TypedEvent<SyncBaseMessage> = new TypedEvent<SyncBaseMessage>()
+  public onSocketClose:TypedEvent<void> = new TypedEvent<void>()
+
   private _onData(buffer){
     let message = SyncBaseMessage.decode(buffer)
     console.log(`rx`,message.messageType,this.name)
     this.onSyncBaseMessage.emit(message)
+  }
+  private _onClose(){
+    this.onSocketClose.emit(null);
   }
   sendMessage(message:SyncBaseMessage){
     console.log(`tx`,message.messageType,this.name)

@@ -9,15 +9,17 @@ import {GroupMessageBase} from './groupMessageBase'
 export class SyncSocket {
   public syncBaseSocket:SyncBaseSocket
   constructor(socket,name){
-    this.onListGroups = new TypedEvent<ListGroups>()
-    this.onJoinGroup = new TypedEvent<JoinGroup>()
-    this.onGroupMessageBase = new TypedEvent<GroupMessageBase>() 
     this.syncBaseSocket = new SyncBaseSocket(socket,name)
     this.syncBaseSocket.onSyncBaseMessage.on(this._onSyncBaseMessage.bind(this))
+    this.syncBaseSocket.onSocketClose.on(this._onSocketClose.bind(this))
   }
-  public onListGroups:TypedEvent<ListGroups>
-  public onJoinGroup:TypedEvent<JoinGroup>
-  public onGroupMessageBase:TypedEvent<GroupMessageBase>
+  public onListGroups:TypedEvent<ListGroups> = new TypedEvent<ListGroups>()
+  public onJoinGroup:TypedEvent<JoinGroup> = new TypedEvent<JoinGroup>()
+  public onSocketClose:TypedEvent<void> = new TypedEvent<void>()
+  public onGroupMessageBase:TypedEvent<GroupMessageBase> = new TypedEvent<GroupMessageBase>()
+  private _onSocketClose(){
+    this.onSocketClose.emit(null);
+  }
   private _onSyncBaseMessage(syncBaseMessage:SyncBaseMessage){
     if(syncBaseMessage.messageType == 1){
       let message = ListGroups.decode(syncBaseMessage.messageBody)

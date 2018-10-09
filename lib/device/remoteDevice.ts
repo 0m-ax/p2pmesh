@@ -12,14 +12,23 @@ export class RemoteDevice extends Device {
     }
     removeSocket(groupSocket: GroupSocket) {
         this.sockets.delete(groupSocket)
+        console.log(this.sockets.size)
+        if(this.sockets.size < 1){
+            this.onDeviceLeave.emit(null);
+        }
     }
-    get deviceWeight() {
-        return this.getShortestSocket().weight
+    deviceWeight(socket:GroupSocket) {
+        let ss = this.getShortestSocket(socket)
+        if(ss){
+            return ss.weight + 1;
+        }
+        return null;
     }
-    private getShortestSocket(): DeviceSocket {
-        return Array.from(this.sockets.values()).sort((a, b) => a.weight - b.weight)[0]
-        //throw new Error('ho awat')
-        //return Array.from(this.sockets).sort((a,b)=>a.weight-b.weight)[0]
+    getShortestSocket(excluding?:GroupSocket): DeviceSocket {
+        return Array.from(this.sockets.keys())
+        .filter((gSocket)=>!excluding || excluding !== gSocket)
+        .map((gSocket)=>this.sockets.get(gSocket))
+        .sort((a, b) => a.weight - b.weight)[0]
     }
     onMessage(socket:GroupSocket,message:DeviceMessageBase){
         this.getShortestSocket().groupSocket.sendMessage(message)

@@ -16,7 +16,6 @@ export class Group{
     public groupID:number;
     public groupName:string
     public onNewDevice = new TypedEvent<Device>();
-
     get deviceArray():Array<Device>{
         return Object.keys(this.devices).map((key) => this.devices[key])
     }
@@ -34,7 +33,7 @@ export class Group{
     }
     _onListDevices(socket:GroupSocket,message:ListDevices){
         let devices = message.devices
-        let deviceListKey = this.deviceArray.map((device)=>device.deviceID+':'+device.deviceWeight).join(',')
+        let deviceListKey = this.deviceArray.map((device)=>device.deviceID+':'+device.deviceWeight(socket)).join(',')
         for(let device of devices){
             if(!this.devices[device.deviceID]){
                 let remoteDevice = new RemoteDevice(device.deviceID,device.deviceName,this)
@@ -42,14 +41,19 @@ export class Group{
                 this.addDevice(remoteDevice)
             }else{
                 this.devices[device.deviceID].addSocket(socket,device.deviceWeight)
-
             }
         }
-        let newDeviceListKey = this.deviceArray.map((device)=>device.deviceID+':'+device.deviceWeight).join(',')
-        console.log(deviceListKey,newDeviceListKey)
+        for(let device of this.deviceArray){
+            if(!devices.find((dev)=>dev.deviceID===device.deviceID)){
+                //console.log("I dont have it")
+                device.removeSocket(socket)
+            }
+        }
+        let newDeviceListKey = this.deviceArray.map((device)=>device.deviceID+':'+device.deviceWeight(socket)).join(',')
+//        console.log(socket.syncSocket.syncBaseSocket.name,deviceListKey,newDeviceListKey)
         if(deviceListKey != newDeviceListKey){
             for(let groupSocket of this.groupSockets.values()){
-                groupSocket.sendMessage(this.getDeviceList())
+                groupSocket.sendMessage(this.getDeviceList(groupSocket))
             }
         }
     }
@@ -58,7 +62,15 @@ export class Group{
     }
     addDevice(device:Device){
         this.devices[device.deviceID] = device;
+        device.onDeviceLeave.on(this._onDeviceLeave.bind(this,device))
         this.onNewDevice.emit(device)
+    }
+    _onDeviceLeave(device:Device){
+ //       console.log("leaving")
+        delete this.devices[device.deviceID];
+        for(let socket of this.groupSockets.values()){
+            socket.sendMessage(this.getDeviceList(socket))
+        }
     }
     addSocket(socket:SyncSocket){
         if(this.groupSockets.has(socket)){
@@ -66,22 +78,43 @@ export class Group{
         }
         let groupSocket = new GroupSocket(socket,this);
         this.groupSockets.set(socket,groupSocket)
-        console.log(socket)
-        groupSocket.sendMessage(this.getDeviceList())
+        groupSocket.sendMessage(this.getDeviceList(groupSocket))
     }
-    getDeviceList(){
+    getDeviceList(socket:GroupSocket){
         let devices = this.deviceArray.map((device)=>{
             return {
                 deviceID:device.deviceID,
                 deviceName:device.deviceName,
-                deviceWeight:device.deviceWeight+1
+                deviceWeight:device.deviceWeight(socket)
             }
+        }).filter(({deviceWeight,deviceName})=>{
+            return deviceWeight !== null
         })
+        // console.log(socket.syncSocket.syncBaseSocket.name,devices)
+//        for(let device of this.deviceArray){
+//            if(device instanceof RemoteDevice){
+//                if(device.getShortestSocket(socket)){
+//                    console.log(device.deviceID,'via',device.getShortestSocket(socket).groupSocket.syncSocket.syncBaseSocket.name)
+//                }else{
+//                    console.log(device.deviceID,'cant go to')    
+//                }
+//            }else{
+//                console.log(device.deviceID,'is me')
+//            }
+//        }
         return new ListDevices({
             devices:devices
         })
     }
     removeSocket(socket:SyncSocket){
+//        console.log("removing")
+        let groupSocket = this.groupSockets.get(socket)
         this.groupSockets.delete(socket)
+        for(let device of Object.keys(this.devices).map((deviceID)=>this.devices[deviceID])){
+            device.removeSocket(groupSocket)
+        }
+        for(let socket of this.groupSockets.values()){
+            socket.sendMessage(this.getDeviceList(socket))
+        }
     }
 }
